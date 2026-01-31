@@ -2,7 +2,10 @@ package com.example.bankcards.service;
 
 import com.example.bankcards.dto.TransferRequest;
 import com.example.bankcards.dto.TransferResponse;
-import com.example.bankcards.entity.*;
+import com.example.bankcards.entity.Card;
+import com.example.bankcards.entity.Transfer;
+import com.example.bankcards.entity.TransferStatus;
+import com.example.bankcards.entity.User;
 import com.example.bankcards.exception.*;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.TransferRepository;
@@ -27,6 +30,7 @@ public class TransferService {
     private final CardRepository cardRepository;
     private final CardNumberMasker cardNumberMasker;
     private final UserRepository userRepository;
+    private final EncryptionUtil encryptionUtil;
 
     @Value("${app.transfer.max-amount:1000000.00}")
     private BigDecimal maxTransferAmount;
@@ -123,7 +127,7 @@ public class TransferService {
     }
 
     private Card findCardByNumber(String cardNumber, User owner) {
-        String cardHash = EncryptionUtil.hash(cardNumber);
+        String cardHash = encryptionUtil.hash(cardNumber);
 
         Card card = cardRepository.findByCardNumberHash(cardHash)
                 .orElseThrow(() -> new CardNotFoundException("Card not found"));

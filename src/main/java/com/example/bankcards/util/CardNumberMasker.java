@@ -12,11 +12,4 @@ public class CardNumberMasker {
     public String maskCardNumber(String lastFourDigits) {
         return String.format(maskPattern, lastFourDigits);
     }
-
-    public static String extractLastFourDigits(String cardNumber) {
-        if (cardNumber == null || cardNumber.length() < 4) {
-            throw new IllegalArgumentException("Invalid card number");
-        }
-        return cardNumber.substring(cardNumber.length() - 4);
-    }
 }

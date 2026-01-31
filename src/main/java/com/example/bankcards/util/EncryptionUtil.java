@@ -51,7 +51,7 @@ public class EncryptionUtil {
         }
     }
 
-    public static String hash(String data) {
+    public String hash(String data) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(data.getBytes(StandardCharsets.UTF_8));

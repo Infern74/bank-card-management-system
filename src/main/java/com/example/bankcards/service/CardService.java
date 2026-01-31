@@ -41,7 +41,7 @@ public class CardService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + request.getOwnerId()));
 
         String cardNumber = request.getCardNumber();
-        String cardHash = EncryptionUtil.hash(cardNumber);
+        String cardHash = encryptionUtil.hash(cardNumber);
 
         if (cardRepository.findByCardNumberHash(cardHash).isPresent()) {
             throw new IllegalArgumentException("Card with this number already exists");
@@ -99,7 +99,7 @@ public class CardService {
         boolean isAdmin = user.getRoles().contains(Role.ROLE_ADMIN);
 
         if (!isOwner && !isAdmin) {
-            throw new AccessDeniedException("Access denied to card");
+            throw new CardAccessDeniedException("Access denied to card");
         }
 
         return mapToResponse(card);
