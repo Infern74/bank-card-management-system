@@ -1,0 +1,80 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: system
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: username
+                  value: admin
+              - column:
+                  name: password
+                  value: $2a$10$XpAlk7RL6bvhcBOpCLhuSe1yoRpEMlEDrB.YwuoOAPQTT3ntLqZ1W
+              - column:
+                  name: full_name
+                  value: "Администратор Системы"
+              - column:
+                  name: email
+                  value: admin@bank.com
+              - column:
+                  name: created_at
+                  value: NOW()
+              - column:
+                  name: updated_at
+                  value: NOW()
+
+  - changeSet:
+      id: 3
+      author: system
+      changes:
+        - insert:
+            tableName: user_roles
+            columns:
+              - column:
+                  name: user_id
+                  value: 1
+              - column:
+                  name: role
+                  value: ROLE_ADMIN
+
+  - changeSet:
+      id: 4
+      author: system
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: username
+                  value: user1
+              - column:
+                  name: password
+                  value: $2a$10$Km2OzNh7wFY4WmYB0Sv7aOwL640hbVlVWDUy107up.8BcF1wDqTte
+              - column:
+                  name: full_name
+                  value: "Иван Иванов"
+              - column:
+                  name: email
+                  value: user1@bank.com
+              - column:
+                  name: created_at
+                  value: NOW()
+              - column:
+                  name: updated_at
+                  value: NOW()
+
+  - changeSet:
+      id: 5
+      author: system
+      changes:
+        - insert:
+            tableName: user_roles
+            columns:
+              - column:
+                  name: user_id
+                  value: 2
+              - column:
+                  name: role
+                  value: ROLE_USER

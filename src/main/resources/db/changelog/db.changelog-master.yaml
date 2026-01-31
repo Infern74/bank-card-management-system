@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - include:
+      file: db/migration/001-initial-schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/migration/002-initial-data.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/migration/003-card-block-requests.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/migration/004-add-user-active-column.yaml
+      relativeToChangelogFile: false
