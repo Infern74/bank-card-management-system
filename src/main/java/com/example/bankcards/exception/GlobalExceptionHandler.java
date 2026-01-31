@@ -50,6 +50,20 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({
+            CardAccessDeniedException.class
+    })
+    public ResponseEntity<ErrorResponse> handleCardAccessDeniedException(RuntimeException ex, WebRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.FORBIDDEN.value())
+                .error("Access denied")
+                .message(ex.getMessage())
+                .path(request.getDescription(false).replace("uri=", ""))
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler({
             AccessDeniedException.class
     })
     public ResponseEntity<ErrorResponse> handleForbiddenException(RuntimeException ex, WebRequest request) {

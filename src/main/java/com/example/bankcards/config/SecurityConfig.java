@@ -3,9 +3,15 @@ package com.example.bankcards.config;
 import com.example.bankcards.security.JwtAuthEntryPoint;
 import com.example.bankcards.security.JwtAuthTokenFilter;
 import com.example.bankcards.security.JwtUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -18,17 +24,21 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -66,6 +76,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(unauthorizedHandler)
+                        .accessDeniedHandler(accessDeniedHandler())
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -74,8 +85,10 @@ public class SecurityConfig {
                         // Все публичные пути
                         .requestMatchers(PUBLIC_PATHS).permitAll()
 
-                        // Админские пути
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        // Переводы и карты требуют аутентификации
+                        .requestMatchers("/transfers/**").authenticated()
+                        .requestMatchers("/cards/**").authenticated()
+                        .requestMatchers("/card-block-requests/**").authenticated()
 
                         // Все остальное требует аутентификации
                         .anyRequest().authenticated()
@@ -85,6 +98,29 @@ public class SecurityConfig {
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler() {
+        return new AccessDeniedHandler() {
+            @Override
+            public void handle(HttpServletRequest request, HttpServletResponse response,
+                               AccessDeniedException accessDeniedException) throws IOException {
+
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+
+                final Map<String, Object> body = new HashMap<>();
+                body.put("timestamp", java.time.LocalDateTime.now().toString());
+                body.put("status", HttpStatus.FORBIDDEN.value());
+                body.put("error", "Forbidden");
+                body.put("message", "Access denied. You don't have permission to access this resource.");
+                body.put("path", request.getServletPath());
+
+                final ObjectMapper mapper = new ObjectMapper();
+                mapper.writeValue(response.getOutputStream(), body);
+            }
+        };
     }
 
     @Bean

@@ -1,1 +1,1026 @@
-# Здесь будет OpenAPI описание всех доступных эндпоинтов и моделей данных.
+openapi: 3.0.1
+info:
+  title: Bank Card Management System API
+  description: |
+    ## API для системы управления банковскими картами
+
+    ### Доступные эндпоинты:
+    - **Аутентификация**: `/auth/**`
+    - **Карты**: `/cards/**`
+    - **Переводы**: `/transfers/**`
+    - **Здоровье системы**: `/health`
+
+    ### Авторизация:
+    Для использования защищенных эндпоинтов необходимо:
+    1. Выполнить вход через `/auth/login`
+    2. Получить JWT токен
+    3. Добавить заголовок: `Authorization: Bearer <token>`
+  contact:
+    name: Support
+    email: support@bank.com
+  version: 1.0.0
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+security:
+- bearerAuth: []
+tags:
+- name: Управление пользователями
+  description: API для администратора
+- name: Переводы
+  description: API для управления переводами между картами
+- name: Карты
+  description: API для управления банковскими картами
+- name: Запросы на блокировку карт
+  description: API для управления запросами на блокировку карт
+- name: Здоровье
+  description: Проверка состояния сервиса
+- name: Аутентификация
+  description: API для аутентификации и регистрации
+paths:
+  /transfers/{id}/cancel:
+    put:
+      tags:
+      - Переводы
+      summary: Отменить перевод
+      operationId: cancelTransfer
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+      security:
+      - bearerAuth: []
+  /cards/{id}/block:
+    put:
+      tags:
+      - Карты
+      summary: Заблокировать карту
+      description: Только для администратора
+      operationId: adminBlockCard
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/CardResponse'
+      security:
+      - bearerAuth: []
+  /cards/{id}/activate:
+    put:
+      tags:
+      - Карты
+      summary: Активировать карту
+      description: Только для администратора
+      operationId: activateCard
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/CardResponse'
+      security:
+      - bearerAuth: []
+  /transfers:
+    post:
+      tags:
+      - Переводы
+      summary: Создать перевод между своими картами
+      operationId: createTransfer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TransferResponse'
+      security:
+      - bearerAuth: []
+  /cards:
+    get:
+      tags:
+      - Карты
+      summary: Получить все карты
+      description: Только для администратора
+      operationId: getAllCards
+      parameters:
+      - name: pageable
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/Pageable'
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/PageCardResponse'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Карты
+      summary: Создать карту
+      description: Только для администратора
+      operationId: createCard
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardCreateRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/CardResponse'
+      security:
+      - bearerAuth: []
+  /card-block-requests:
+    get:
+      tags:
+      - Запросы на блокировку карт
+      summary: Получить все запросы на блокировку
+      description: Только для администратора
+      operationId: getAllBlockRequests
+      parameters:
+      - name: pageable
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/Pageable'
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/PageCardBlockRequestResponse'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Запросы на блокировку карт
+      summary: Создать запрос на блокировку карты
+      operationId: createBlockRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardBlockRequestCreateRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/CardBlockRequestResponse'
+      security:
+      - bearerAuth: []
+  /card-block-requests/{requestId}/reject:
+    post:
+      tags:
+      - Запросы на блокировку карт
+      summary: Отклонить запрос на блокировку
+      description: Только для администратора
+      operationId: rejectBlockRequest
+      parameters:
+      - name: requestId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: adminComment
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/CardBlockRequestResponse'
+      security:
+      - bearerAuth: []
+  /card-block-requests/{requestId}/cancel:
+    post:
+      tags:
+      - Запросы на блокировку карт
+      summary: Отменить свой запрос на блокировку
+      operationId: cancelBlockRequest
+      parameters:
+      - name: requestId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/CardBlockRequestResponse'
+      security:
+      - bearerAuth: []
+  /card-block-requests/{requestId}/approve:
+    post:
+      tags:
+      - Запросы на блокировку карт
+      summary: Одобрить запрос на блокировку
+      description: Только для администратора
+      operationId: approveBlockRequest
+      parameters:
+      - name: requestId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: adminComment
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/CardBlockRequestResponse'
+      security:
+      - bearerAuth: []
+  /auth/register:
+    post:
+      tags:
+      - Аутентификация
+      summary: Регистрация пользователя
+      description: Создание нового пользователя с ролью USER
+      operationId: registerUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+  /auth/login:
+    post:
+      tags:
+      - Аутентификация
+      summary: Вход в систему
+      description: Аутентификация пользователя и получение JWT токена
+      operationId: authenticateUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/JwtResponse'
+  /admin/users/{userId}/block:
+    post:
+      tags:
+      - Управление пользователями
+      summary: Заблокировать пользователя
+      operationId: blockUser
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+      security:
+      - bearerAuth: []
+  /admin/users/{userId}/activate:
+    post:
+      tags:
+      - Управление пользователями
+      summary: Активировать пользователя
+      operationId: activateUser
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+      security:
+      - bearerAuth: []
+  /transfers/{id}:
+    get:
+      tags:
+      - Переводы
+      summary: Получить перевод по ID
+      operationId: getTransferById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TransferResponse'
+      security:
+      - bearerAuth: []
+  /transfers/my:
+    get:
+      tags:
+      - Переводы
+      summary: Получить переводы текущего пользователя
+      operationId: getUserTransfers
+      parameters:
+      - name: pageable
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/Pageable'
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/PageTransferResponse'
+      security:
+      - bearerAuth: []
+  /health:
+    get:
+      tags:
+      - Здоровье
+      summary: Проверка состояния сервиса
+      operationId: healthCheck
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+  /cards/{id}:
+    get:
+      tags:
+      - Карты
+      summary: Получить карту по ID
+      operationId: getCardById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/CardResponse'
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Карты
+      summary: Удалить карту
+      description: Только для администратора
+      operationId: deleteCard
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+      security:
+      - bearerAuth: []
+  /cards/{id}/balance:
+    get:
+      tags:
+      - Карты
+      summary: Получить баланс карты
+      operationId: getCardBalance
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: number
+      security:
+      - bearerAuth: []
+  /cards/my:
+    get:
+      tags:
+      - Карты
+      summary: Получить карты текущего пользователя
+      operationId: getUserCards
+      parameters:
+      - name: pageable
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/Pageable'
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/PageCardResponse'
+      security:
+      - bearerAuth: []
+  /cards/my/search:
+    get:
+      tags:
+      - Карты
+      summary: Поиск карт текущего пользователя
+      operationId: searchCards
+      parameters:
+      - name: query
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: pageable
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/Pageable'
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/PageCardResponse'
+      security:
+      - bearerAuth: []
+  /cards/my/filter:
+    get:
+      tags:
+      - Карты
+      summary: Фильтрация карт по статусу
+      operationId: filterCards
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - ACTIVE
+          - BLOCKED
+          - EXPIRED
+      - name: pageable
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/Pageable'
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/PageCardResponse'
+      security:
+      - bearerAuth: []
+  /card-block-requests/status/{status}:
+    get:
+      tags:
+      - Запросы на блокировку карт
+      summary: Получить запросы по статусу
+      description: Только для администратора
+      operationId: getBlockRequestsByStatus
+      parameters:
+      - name: status
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - PENDING
+          - APPROVED
+          - REJECTED
+          - CANCELLED
+      - name: pageable
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/Pageable'
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/PageCardBlockRequestResponse'
+      security:
+      - bearerAuth: []
+  /card-block-requests/my:
+    get:
+      tags:
+      - Запросы на блокировку карт
+      summary: Получить мои запросы на блокировку
+      operationId: getMyBlockRequests
+      parameters:
+      - name: pageable
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/Pageable'
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/PageCardBlockRequestResponse'
+      security:
+      - bearerAuth: []
+  /admin/users:
+    get:
+      tags:
+      - Управление пользователями
+      summary: Получить всех пользователей
+      operationId: getAllUsers
+      parameters:
+      - name: pageable
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/Pageable'
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/PageUserResponse'
+      security:
+      - bearerAuth: []
+components:
+  schemas:
+    CardResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        maskedCardNumber:
+          type: string
+        cardHolderName:
+          type: string
+        expirationDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - BLOCKED
+          - EXPIRED
+        balance:
+          type: number
+        ownerId:
+          type: integer
+          format: int64
+        ownerName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    TransferRequest:
+      required:
+      - amount
+      - fromCardNumber
+      - toCardNumber
+      type: object
+      properties:
+        fromCardNumber:
+          type: string
+        toCardNumber:
+          type: string
+        amount:
+          minimum: 0.01
+          exclusiveMinimum: false
+          type: number
+        description:
+          type: string
+    TransferResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        fromCardMasked:
+          type: string
+        toCardMasked:
+          type: string
+        amount:
+          type: number
+        description:
+          type: string
+        status:
+          type: string
+          enum:
+          - PENDING
+          - COMPLETED
+          - FAILED
+          - CANCELLED
+        transferDate:
+          type: string
+          format: date-time
+    CardCreateRequest:
+      required:
+      - cardHolderName
+      - cardNumber
+      - cvv
+      - expirationDate
+      - ownerId
+      type: object
+      properties:
+        cardNumber:
+          pattern: "^[0-9]{16}$"
+          type: string
+        cardHolderName:
+          type: string
+        expirationDate:
+          type: string
+          format: date
+        cvv:
+          pattern: "^[0-9]{3,4}$"
+          type: string
+        ownerId:
+          type: integer
+          format: int64
+        initialBalance:
+          minimum: 0.0
+          exclusiveMinimum: false
+          type: number
+    CardBlockRequestCreateRequest:
+      required:
+      - cardId
+      - reason
+      type: object
+      properties:
+        cardId:
+          type: integer
+          format: int64
+        reason:
+          type: string
+    CardBlockRequestResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        cardId:
+          type: integer
+          format: int64
+        maskedCardNumber:
+          type: string
+        requestedById:
+          type: integer
+          format: int64
+        requestedByUsername:
+          type: string
+        reason:
+          type: string
+        status:
+          type: string
+          enum:
+          - PENDING
+          - APPROVED
+          - REJECTED
+          - CANCELLED
+        processedById:
+          type: integer
+          format: int64
+        processedByUsername:
+          type: string
+        adminComment:
+          type: string
+        requestedAt:
+          type: string
+          format: date-time
+        processedAt:
+          type: string
+          format: date-time
+    RegisterRequest:
+      required:
+      - email
+      - fullName
+      - password
+      - username
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        email:
+          type: string
+        fullName:
+          type: string
+    LoginRequest:
+      required:
+      - password
+      - username
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    JwtResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        type:
+          type: string
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+        roles:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    Pageable:
+      type: object
+      properties:
+        page:
+          minimum: 0
+          type: integer
+          format: int32
+        size:
+          minimum: 1
+          type: integer
+          format: int32
+        sort:
+          type: array
+          items:
+            type: string
+    PageTransferResponse:
+      type: object
+      properties:
+        totalPages:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        last:
+          type: boolean
+        pageable:
+          $ref: '#/components/schemas/PageableObject'
+        first:
+          type: boolean
+        numberOfElements:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferResponse'
+        number:
+          type: integer
+          format: int32
+        sort:
+          $ref: '#/components/schemas/SortObject'
+        empty:
+          type: boolean
+    PageableObject:
+      type: object
+      properties:
+        pageNumber:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        paged:
+          type: boolean
+        unpaged:
+          type: boolean
+        offset:
+          type: integer
+          format: int64
+        sort:
+          $ref: '#/components/schemas/SortObject'
+    SortObject:
+      type: object
+      properties:
+        sorted:
+          type: boolean
+        unsorted:
+          type: boolean
+        empty:
+          type: boolean
+    PageCardResponse:
+      type: object
+      properties:
+        totalPages:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        last:
+          type: boolean
+        pageable:
+          $ref: '#/components/schemas/PageableObject'
+        first:
+          type: boolean
+        numberOfElements:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CardResponse'
+        number:
+          type: integer
+          format: int32
+        sort:
+          $ref: '#/components/schemas/SortObject'
+        empty:
+          type: boolean
+    PageCardBlockRequestResponse:
+      type: object
+      properties:
+        totalPages:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        last:
+          type: boolean
+        pageable:
+          $ref: '#/components/schemas/PageableObject'
+        first:
+          type: boolean
+        numberOfElements:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CardBlockRequestResponse'
+        number:
+          type: integer
+          format: int32
+        sort:
+          $ref: '#/components/schemas/SortObject'
+        empty:
+          type: boolean
+    PageUserResponse:
+      type: object
+      properties:
+        totalPages:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        last:
+          type: boolean
+        pageable:
+          $ref: '#/components/schemas/PageableObject'
+        first:
+          type: boolean
+        numberOfElements:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserResponse'
+        number:
+          type: integer
+          format: int32
+        sort:
+          $ref: '#/components/schemas/SortObject'
+        empty:
+          type: boolean
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+        fullName:
+          type: string
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

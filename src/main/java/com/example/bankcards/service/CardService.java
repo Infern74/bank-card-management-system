@@ -95,8 +95,11 @@ public class CardService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        if (!card.getOwner().getId().equals(userId) && !user.getRoles().contains(Role.ROLE_ADMIN)) {
-            throw new AccessDeniedException("Access denied");
+        boolean isOwner = card.getOwner().getId().equals(userId);
+        boolean isAdmin = user.getRoles().contains(Role.ROLE_ADMIN);
+
+        if (!isOwner && !isAdmin) {
+            throw new AccessDeniedException("Access denied to card");
         }
 
         return mapToResponse(card);
@@ -320,8 +323,11 @@ public class CardService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        if (!card.getOwner().getId().equals(userId) && !user.getRoles().contains(Role.ROLE_ADMIN)) {
-            throw new AccessDeniedException("Access denied");
+        boolean isOwner = card.getOwner().getId().equals(userId);
+        boolean isAdmin = user.getRoles().contains(Role.ROLE_ADMIN);
+
+        if (!isOwner && !isAdmin) {
+            throw new CardAccessDeniedException("Access denied to card");
         }
 
         return card.getBalance();

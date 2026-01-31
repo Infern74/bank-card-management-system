@@ -108,7 +108,6 @@ public class TransferService {
         Card fromCard = transfer.getFromCard();
         Card toCard = transfer.getToCard();
 
-        // Проверяем, что на карте получателя достаточно средств для отмены
         if (toCard.getBalance().compareTo(transfer.getAmount()) < 0) {
             throw new InsufficientFundsException("Insufficient funds on destination card to cancel transfer");
         }
